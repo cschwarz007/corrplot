@@ -178,7 +178,8 @@
 #'   regarded as insignificant. If \code{insig} is \code{'label_sig'}, this may
 #'   be an increasing vector of significance levels, in which case \code{pch}
 #'   will be used once for the highest p-value interval and multiple times
-#'   (e.g. '*', '**', '***') for each lower p-value interval.
+#'   (e.g. '*', '**', '***') for each lower p-value interval. With
+#'   \code{'label_sig_upper'}, the p-value will be put on the top of each box.
 #'
 #' @param insig Character, specialized insignificant correlation coefficients,
 #'   \code{'pch'} (default), \code{'p-value'}, \code{'blank'}, \code{'n'}, or
@@ -292,7 +293,7 @@ corrplot = function(corr,
   transKeepSign = TRUE,
 
   p.mat = NULL, sig.level = 0.05,
-  insig = c('pch', 'p-value', 'blank', 'n', 'label_sig'),
+  insig = c('pch', 'p-value', 'blank', 'n', 'label_sig','label_sig_upper'),
   pch = 4, pch.col = 'black', pch.cex = 3,
 
   plotCI = c('n', 'square', 'circle', 'rect'),
@@ -943,6 +944,38 @@ corrplot = function(corr,
 
       }
 
+    } else if (insig == "label_sig_upper") {
+            if (!is.character(pch)) 
+                pch = "*"
+            place_points = function(sig.locs, point) {
+                text(pos.pNew[, 1][sig.locs], (pos.pNew[, 2][sig.locs]) + 
+                  0.25, labels = point, col = pch.col, cex = pch.cex, 
+                  lwd = 2)
+            }
+            if (length(sig.level) == 1) {
+                place_points(sig.locs = which(pNew < sig.level), 
+                  point = pch)
+            }
+            else {
+                l = length(sig.level)
+                for (i in seq_along(sig.level)) {
+                  iter = l + 1 - i
+                  pchTmp = paste(rep(pch, i), collapse = "")
+                  if (i == length(sig.level)) {
+                    locs = which(pNew < sig.level[iter])
+                    if (length(locs)) {
+                      place_points(sig.locs = locs, point = pchTmp)
+                    }
+                  }
+                  else {
+                    locs = which(pNew < sig.level[iter] & pNew > 
+                      sig.level[iter - 1])
+                    if (length(locs)) {
+                      place_points(sig.locs = locs, point = pchTmp)
+                    }
+                  }
+                }
+            }
     } else {
 
       ind.p = which(pNew > sig.level)
